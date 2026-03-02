@@ -1,0 +1,37 @@
+Kuwait International Bank
+كشف حساب / Account Statement
+
+Account Holder: AHMAD MOHAMMAD AL-SABAH
+Account Number: 0012345678
+Currency: KWD
+
+Statement Period: 01/07/2025 - 31/12/2025
+
+Date        | Description                    | Debit   | Credit  | Balance
+------------|--------------------------------|---------|---------|--------
+01/07/2025  | Opening Balance                |         |         | 2,450.500
+05/07/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 3,950.500
+10/07/2025  | ATM WITHDRAWAL                 | 200.000 |         | 3,750.500
+15/07/2025  | RENT PAYMENT                   | 450.000 |         | 3,300.500
+20/07/2025  | GROCERY - SULTAN CENTER        | 85.250  |         | 3,215.250
+05/08/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 4,715.250
+10/08/2025  | ATM WITHDRAWAL                 | 300.000 |         | 4,415.250
+15/08/2025  | RENT PAYMENT                   | 450.000 |         | 3,965.250
+22/08/2025  | LOAN REPAYMENT - CAR LOAN      | 250.000 |         | 3,715.250
+05/09/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 5,215.250
+10/09/2025  | ATM WITHDRAWAL                 | 150.000 |         | 5,065.250
+15/09/2025  | RENT PAYMENT                   | 450.000 |         | 4,615.250
+20/09/2025  | LOAN REPAYMENT - CAR LOAN      | 250.000 |         | 4,365.250
+05/10/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 5,865.250
+12/10/2025  | SHOPPING - AVENUES MALL        | 320.000 |         | 5,545.250
+15/10/2025  | RENT PAYMENT                   | 450.000 |         | 5,095.250
+22/10/2025  | LOAN REPAYMENT - CAR LOAN      | 250.000 |         | 4,845.250
+05/11/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 6,345.250
+10/11/2025  | ATM WITHDRAWAL                 | 200.000 |         | 6,145.250
+15/11/2025  | RENT PAYMENT                   | 450.000 |         | 5,695.250
+20/11/2025  | LOAN REPAYMENT - CAR LOAN      | 250.000 |         | 5,445.250
+05/12/2025  | SALARY TRANSFER - KPC          |         | 1,500.000 | 6,945.250
+08/12/2025  | UTILITY PAYMENT - MEW          | 45.000  |         | 6,900.250
+15/12/2025  | RENT PAYMENT                   | 450.000 |         | 6,450.250
+20/12/2025  | LOAN REPAYMENT - CAR LOAN      | 250.000 |         | 6,200.250
+31/12/2025  | Closing Balance                |         |         | 6,200.250

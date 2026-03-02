@@ -1,0 +1,15 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+PyMuPDF==1.25.3
+paddleocr>=2.9.1
+paddlepaddle>=3.0.0
+thefuzz[speedup]==0.22.1
+sse-starlette==2.2.1
+aiofiles==24.1.0
+pytest==8.3.4
+httpx==0.28.1
+Pillow==11.1.0

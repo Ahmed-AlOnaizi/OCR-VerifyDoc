@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+docvenv/
+vervenv/
+
+# Environment
+.env
+
+# SQLite
+*.db
+
+# Uploads
+backend/uploads/
+
+# Data
+doc-test/
+
+# Claude
+.claude/
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PaddleOCR models cache
+~/.paddleocr/

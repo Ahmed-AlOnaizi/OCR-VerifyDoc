@@ -1,0 +1,23 @@
+دولة الكويت
+STATE OF KUWAIT
+البطاقة المدنية
+CIVIL ID CARD
+
+الرقم المدني / Civil ID
+281234567890
+
+الاسم / Name
+أحمد محمد الصباح
+AHMAD MOHAMMAD AL-SABAH
+
+تاريخ الميلاد / Date of Birth
+15/03/1988
+
+الجنسية / Nationality
+كويتي / KUWAITI
+
+الجنس / Gender
+ذكر / MALE
+
+تاريخ الانتهاء / Expiry Date
+20/06/2028
