@@ -121,8 +121,7 @@ def _run_pipeline(job_id: int, user_id: int, db):
     _update(job_id, db, phase="verify", progress=35.0)
     cid_verification = verify_civil_id(
         cid_extracted,
-        expected_name_en=user.name_en,
-        expected_name_ar=user.name_ar,
+        expected_name=user.name,
     )
     verifications["civil_id"] = {
         "passed": cid_verification.passed,
@@ -186,7 +185,6 @@ def _run_pipeline(job_id: int, user_id: int, db):
     if "bank_statement" in extracted:
         v = verify_bank_statement(
             extracted["bank_statement"],
-            expected_salary=user.salary,
         )
         verifications["bank_statement"] = {
             "passed": v.passed,
@@ -201,9 +199,7 @@ def _run_pipeline(job_id: int, user_id: int, db):
     if "salary_transfer" in extracted:
         v = verify_salary_transfer(
             extracted["salary_transfer"],
-            expected_civil_id=user.civil_id,
-            expected_name_en=user.name_en,
-            expected_salary=user.salary,
+            expected_name=user.name,
         )
         verifications["salary_transfer"] = {
             "passed": v.passed,

@@ -17,9 +17,6 @@ def list_users(db: Session = Depends(get_db)):
 
 @router.post("/users", response_model=UserResponse, status_code=201)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.civil_id == payload.civil_id).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="User with this civil ID already exists")
     user = User(**payload.model_dump())
     db.add(user)
     db.commit()

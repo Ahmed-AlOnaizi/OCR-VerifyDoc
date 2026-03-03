@@ -4,20 +4,16 @@ from pydantic import BaseModel
 
 
 class UserCreate(BaseModel):
-    civil_id: str
-    name_en: str
-    name_ar: str = ""
-    employer: str = ""
-    salary: float = 0.0
+    name: str
+    phone: str = ""
+    email: str = ""
 
 
 class UserResponse(BaseModel):
     id: int
-    civil_id: str
-    name_en: str
-    name_ar: str
-    employer: str
-    salary: float
+    name: str
+    phone: str
+    email: str
     created_at: datetime.datetime
 
     model_config = {"from_attributes": True}

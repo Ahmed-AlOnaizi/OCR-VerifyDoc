@@ -20,7 +20,6 @@ class BankStatementVerification:
 
 def verify_bank_statement(
     extracted: BankStatementData,
-    expected_salary: float = 0.0,
 ) -> BankStatementVerification:
     """Verify bank statement data: salary recurrence, stability, and debt."""
     result = BankStatementVerification()
@@ -67,22 +66,6 @@ def verify_bank_statement(
 
         if not result.salary_stability_ok:
             result.errors.append("Salary amounts are not stable across months")
-
-        # Optional: check against expected salary
-        if expected_salary > 0:
-            salary_match = abs(result.average_salary - expected_salary) <= expected_salary * tolerance
-            result.checks.append({
-                "field": "salary_amount",
-                "expected": expected_salary,
-                "average_found": result.average_salary,
-                "tolerance": tolerance,
-                "match": salary_match,
-            })
-            if not salary_match:
-                result.errors.append(
-                    f"Average salary {result.average_salary:.3f} doesn't match "
-                    f"expected {expected_salary:.3f}"
-                )
 
     # Check 3: Debt detection
     result.has_loans = len(extracted.loan_debits) > 0
