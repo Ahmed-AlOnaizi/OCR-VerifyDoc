@@ -19,7 +19,7 @@ export const listDocuments = (userId) =>
 export const uploadDocument = (userId, file, docType) => {
   const form = new FormData();
   form.append("file", file);
-  form.append("doc_type", docType);
+  if (docType) form.append("doc_type", docType);
   return client.post(`/users/${userId}/documents`, form).then((r) => r.data);
 };
 

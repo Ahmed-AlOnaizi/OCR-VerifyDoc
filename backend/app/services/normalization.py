@@ -8,6 +8,11 @@ _ARABIC_DIGIT_MAP = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 _EXTENDED_DIGIT_MAP = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
 
 
+def normalize_unicode(text: str) -> str:
+    """Normalize Unicode presentation forms (e.g. Arabic Presentation Forms-B) to standard characters."""
+    return unicodedata.normalize("NFKC", text)
+
+
 def normalize_digits(text: str) -> str:
     """Convert Arabic-Indic and Extended Arabic-Indic digits to Western."""
     return text.translate(_ARABIC_DIGIT_MAP).translate(_EXTENDED_DIGIT_MAP)

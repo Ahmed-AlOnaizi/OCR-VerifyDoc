@@ -7,6 +7,7 @@ from app.services.extractors.bank_statement import BankStatementData
 @dataclass
 class BankStatementVerification:
     passed: bool = False
+    eligible: bool = False
     salary_months_found: int = 0
     salary_recurrence_ok: bool = False
     salary_amounts: list[float] = field(default_factory=list)
@@ -14,6 +15,9 @@ class BankStatementVerification:
     average_salary: float = 0.0
     has_loans: bool = False
     loan_count: int = 0
+    total_monthly_debt: float = 0.0
+    debt_to_salary_ratio: float = 0.0
+    debt_ratio_ok: bool = True
     checks: list[dict] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -26,6 +30,7 @@ def verify_bank_statement(
     result = BankStatementVerification()
     min_months = settings.SALARY_RECURRENCE_MIN_MONTHS
     tolerance = settings.SALARY_STABILITY_TOLERANCE
+    max_ratio = settings.DEBT_TO_SALARY_MAX_RATIO
 
     # Check 1: Salary recurrence
     result.salary_amounts = [
@@ -94,7 +99,44 @@ def verify_bank_statement(
         "has_loans": result.has_loans,
     })
 
+    # Check 4: Debt-to-salary ratio (eligibility)
+    if result.has_loans and result.average_salary > 0:
+        loan_amounts = [
+            txn.debit for txn in extracted.loan_debits if txn.debit is not None
+        ]
+        total_debt = sum(loan_amounts)
+
+        # Average across distinct months
+        loan_months = set()
+        for txn in extracted.loan_debits:
+            parts = txn.date.split("/")
+            if len(parts) >= 2:
+                loan_months.add(parts[1])
+
+        num_months = max(len(loan_months), 1)
+        result.total_monthly_debt = total_debt / num_months
+
+        result.debt_to_salary_ratio = result.total_monthly_debt / result.average_salary
+        result.debt_ratio_ok = result.debt_to_salary_ratio <= max_ratio
+
+        result.checks.append({
+            "field": "debt_to_salary_ratio",
+            "ratio": round(result.debt_to_salary_ratio, 4),
+            "max_allowed": max_ratio,
+            "total_monthly_debt": round(result.total_monthly_debt, 3),
+            "match": result.debt_ratio_ok,
+        })
+
+        if not result.debt_ratio_ok:
+            result.errors.append(
+                f"Debt-to-salary ratio {result.debt_to_salary_ratio:.1%} "
+                f"exceeds maximum {max_ratio:.0%}"
+            )
+
     # Overall: salary must recur and be stable
     result.passed = result.salary_recurrence_ok and result.salary_stability_ok
+
+    # Eligible: passed AND debt ratio OK
+    result.eligible = result.passed and result.debt_ratio_ok
 
     return result

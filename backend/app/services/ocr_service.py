@@ -43,6 +43,26 @@ class OCRService(ABC):
         ...
 
 
+def _extract_pdf_text(pdf_path: str) -> str | None:
+    """Try extracting embedded text from a PDF using PyMuPDF.
+    Returns the text if meaningful content is found, otherwise None."""
+    import fitz
+
+    doc = fitz.open(pdf_path)
+    all_text = []
+    for page in doc:
+        all_text.append(page.get_text())
+    doc.close()
+
+    combined = "\n".join(all_text).strip()
+    # Consider it valid if we got a reasonable amount of text
+    # (scanned PDFs may return empty or very short strings)
+    if len(combined) > 50:
+        logger.info(f"Extracted {len(combined)} chars of embedded text from PDF")
+        return combined
+    return None
+
+
 class PaddleOCRService(OCRService):
     def __init__(self):
         import paddle
@@ -54,7 +74,13 @@ class PaddleOCRService(OCRService):
         self._lock = threading.Lock()
 
     def extract_text(self, file_path: str) -> str:
+        # For PDFs: try embedded text first (faster + more accurate for digital PDFs)
         if file_path.lower().endswith(".pdf"):
+            embedded = _extract_pdf_text(file_path)
+            if embedded is not None:
+                return embedded
+
+            # Fall back to OCR for scanned PDFs
             image_paths = pdf_to_images(file_path)
         else:
             image_paths = [file_path]

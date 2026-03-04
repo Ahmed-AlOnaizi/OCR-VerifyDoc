@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     SALARY_RECURRENCE_MIN_MONTHS: int = 3
     SALARY_RECURRENCE_LOOKBACK: int = 6
     SALARY_STABILITY_TOLERANCE: float = 0.15
+    DEBT_TO_SALARY_MAX_RATIO: float = 0.40
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"

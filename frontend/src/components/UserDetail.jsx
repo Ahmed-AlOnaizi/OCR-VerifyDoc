@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Paper, Typography, Stack, Chip, Divider, Button, Box,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { getUser, listDocuments, startVerification, getLatestVerification } from "../api/client";
-import DocumentUpload from "./DocumentUpload";
+import DocumentUploadDialog from "./DocumentUploadDialog";
 import VerificationProgress from "./VerificationProgress";
 import ResultDisplay from "./ResultDisplay";
 
@@ -12,6 +13,7 @@ export default function UserDetail({ userId }) {
   const [docs, setDocs] = useState([]);
   const [job, setJob] = useState(null);
   const [activeJobId, setActiveJobId] = useState(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const loadUser = useCallback(() => {
     getUser(userId).then(setUser).catch(console.error);
@@ -89,7 +91,20 @@ export default function UserDetail({ userId }) {
         </Stack>
       )}
 
-      <DocumentUpload userId={userId} onUploaded={loadDocs} />
+      <Button
+        variant="outlined"
+        startIcon={<AddIcon />}
+        onClick={() => setUploadOpen(true)}
+      >
+        Add Documents
+      </Button>
+      <DocumentUploadDialog
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        userId={userId}
+        docs={docs}
+        onUploaded={() => { loadDocs(); setUploadOpen(false); }}
+      />
 
       <Divider sx={{ my: 2 }} />
 

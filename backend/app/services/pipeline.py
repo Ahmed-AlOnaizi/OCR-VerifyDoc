@@ -78,8 +78,21 @@ def run_verification_pipeline(job_id: int, user_id: int):
         db.close()
 
 
+def _compute_decision(verifications: dict[str, dict]) -> str:
+    """Compute overall decision from individual verification results."""
+    if "civil_id" in verifications and not verifications["civil_id"]["passed"]:
+        return "FAIL"
+    if "bank_statement" in verifications and not verifications["bank_statement"].get("eligible", True):
+        return "NOT_ELIGIBLE"
+    if "salary_transfer" in verifications and not verifications["salary_transfer"]["passed"]:
+        return "FAIL"
+    if any(not v["passed"] for v in verifications.values()):
+        return "FAIL"
+    return "PASS"
+
+
 def _run_pipeline(job_id: int, user_id: int, db):
-    """Execute the pipeline phases. Civil ID is processed first; early exit on name mismatch."""
+    """Execute the pipeline phases. All documents processed independently."""
     _update(job_id, db, status=JobStatus.RUNNING, phase="ingest", progress=0.0)
 
     # --- Phase 1: Ingest ---
@@ -97,80 +110,26 @@ def _run_pipeline(job_id: int, user_id: int, db):
 
     _update(job_id, db, phase="ingest", progress=10.0)
 
-    # --- Phase 2: OCR + Extract + Verify civil ID first (early exit) ---
+    # --- Phase 2: OCR all documents ---
     ocr = get_ocr_service()
     ocr_results: dict[str, str] = {}
     extracted: dict[str, object] = {}
     verifications: dict[str, dict] = {}
 
-    if DocType.CIVIL_ID not in doc_map:
-        raise ValueError("Civil ID document is required")
+    doc_types = list(doc_map.keys())
+    total_docs = len(doc_types)
 
-    # OCR civil ID
-    _update(job_id, db, phase="ocr", progress=15.0)
-    cid_doc = doc_map[DocType.CIVIL_ID]
-    ocr_results[DocType.CIVIL_ID.value] = ocr.extract_text(cid_doc.filepath)
-    _update(job_id, db, phase="ocr", progress=25.0)
-
-    # Extract civil ID
-    _update(job_id, db, phase="extract", progress=30.0)
-    cid_extracted = extract_civil_id(ocr_results[DocType.CIVIL_ID.value])
-    extracted[DocType.CIVIL_ID.value] = cid_extracted
-
-    # Verify civil ID (name-only)
-    _update(job_id, db, phase="verify", progress=35.0)
-    cid_verification = verify_civil_id(
-        cid_extracted,
-        expected_name_en=user.name_en,
-        expected_name_ar=user.name_ar,
-    )
-    verifications["civil_id"] = {
-        "passed": cid_verification.passed,
-        "checks": cid_verification.checks,
-        "errors": cid_verification.errors,
-    }
-
-    _update(job_id, db, phase="verify", progress=40.0)
-
-    # Early exit if name doesn't match
-    if not cid_verification.passed:
-        ocr_output_file = _save_ocr_output(job_id, user_id, ocr_results, extracted)
-
-        all_errors = [f"[civil_id] {err}" for err in cid_verification.errors]
-        result = {
-            "decision": "FAIL",
-            "early_exit": True,
-            "early_exit_reason": "Civil ID name verification failed",
-            "documents_verified": 1,
-            "verifications": verifications,
-            "errors": all_errors,
-            "ocr_output_file": ocr_output_file,
-        }
-
-        _update(job_id, db,
-                 status=JobStatus.COMPLETED,
-                 phase="decision",
-                 progress=100.0,
-                 result=result)
-
-        job = db.query(VerificationJob).get(job_id)
-        if job:
-            job.completed_at = datetime.datetime.utcnow()
-            db.commit()
-        return
-
-    # --- Phase 3: OCR remaining documents ---
-    remaining_types = [dt for dt in doc_map if dt != DocType.CIVIL_ID]
-    total_remaining = len(remaining_types)
-
-    for i, doc_type in enumerate(remaining_types):
+    for i, doc_type in enumerate(doc_types):
         doc = doc_map[doc_type]
         ocr_results[doc_type.value] = ocr.extract_text(doc.filepath)
-        progress = 40.0 + (20.0 * (i + 1) / max(total_remaining, 1))
+        progress = 10.0 + (30.0 * (i + 1) / max(total_docs, 1))
         _update(job_id, db, phase="ocr", progress=progress)
 
-    # --- Phase 4: Extract remaining documents ---
-    _update(job_id, db, phase="extract", progress=60.0)
+    # --- Phase 3: Extract all documents ---
+    _update(job_id, db, phase="extract", progress=40.0)
+
+    if DocType.CIVIL_ID.value in ocr_results:
+        extracted["civil_id"] = extract_civil_id(ocr_results[DocType.CIVIL_ID.value])
 
     if DocType.BANK_STATEMENT.value in ocr_results:
         extracted["bank_statement"] = extract_bank_statement(ocr_results[DocType.BANK_STATEMENT.value])
@@ -178,10 +137,22 @@ def _run_pipeline(job_id: int, user_id: int, db):
     if DocType.SALARY_TRANSFER.value in ocr_results:
         extracted["salary_transfer"] = extract_salary_transfer(ocr_results[DocType.SALARY_TRANSFER.value])
 
-    _update(job_id, db, phase="extract", progress=70.0)
+    _update(job_id, db, phase="extract", progress=60.0)
 
-    # --- Phase 5: Verify remaining documents ---
-    _update(job_id, db, phase="verify", progress=70.0)
+    # --- Phase 4: Verify all documents independently ---
+    _update(job_id, db, phase="verify", progress=60.0)
+
+    if "civil_id" in extracted:
+        v = verify_civil_id(
+            extracted["civil_id"],
+            expected_name_en=user.name_en,
+            expected_name_ar=user.name_ar,
+        )
+        verifications["civil_id"] = {
+            "passed": v.passed,
+            "checks": v.checks,
+            "errors": v.errors,
+        }
 
     if "bank_statement" in extracted:
         v = verify_bank_statement(
@@ -190,10 +161,13 @@ def _run_pipeline(job_id: int, user_id: int, db):
         )
         verifications["bank_statement"] = {
             "passed": v.passed,
+            "eligible": v.eligible,
             "salary_months_found": v.salary_months_found,
             "average_salary": v.average_salary,
             "has_loans": v.has_loans,
             "loan_count": v.loan_count,
+            "total_monthly_debt": v.total_monthly_debt,
+            "debt_to_salary_ratio": v.debt_to_salary_ratio,
             "checks": v.checks,
             "errors": v.errors,
         }
@@ -213,20 +187,19 @@ def _run_pipeline(job_id: int, user_id: int, db):
 
     _update(job_id, db, phase="verify", progress=80.0)
 
-    # --- Phase 6: Decision ---
+    # --- Phase 5: Decision ---
     _update(job_id, db, phase="decision", progress=80.0)
 
-    # Save OCR output
     ocr_output_file = _save_ocr_output(job_id, user_id, ocr_results, extracted)
 
-    all_passed = all(v["passed"] for v in verifications.values())
+    decision = _compute_decision(verifications)
     all_errors = []
     for doc_type, v in verifications.items():
         for err in v.get("errors", []):
             all_errors.append(f"[{doc_type}] {err}")
 
     result = {
-        "decision": "PASS" if all_passed else "FAIL",
+        "decision": decision,
         "documents_verified": len(verifications),
         "verifications": verifications,
         "errors": all_errors,
