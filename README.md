@@ -63,9 +63,8 @@ docker-compose up --build
 ### 1. User Registration
 
 Users are created with their identity details:
-- **Civil ID** (12-digit Kuwaiti identifier)
 - **Name** (English and Arabic)
-- **Employer** and **declared salary** (KWD)
+
 
 These fields serve as the ground truth that uploaded documents are verified against.
 
@@ -245,4 +244,4 @@ Place test PDFs in `doc-test/`. The system has been tested with:
 - **KFH bank statements** (YYYY/MM/DD dates, cell-per-line PyMuPDF extraction)
 - **KIB bank statements** (DD/MM/YYYY dates, pipe-delimited format)
 - **Boubyan bank statements** (bilingual with Arabic descriptions)
-- **Salary transfer letters** (English format)
+- **Salary transfer letters** (English format & Arabic Format)
